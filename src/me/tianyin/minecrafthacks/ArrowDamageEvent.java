@@ -23,6 +23,7 @@ public class ArrowDamageEvent implements Listener {
     EntityType entityType = target.getType();
     EntityType projType = proj.getType();
 
+    if (!(proj.getShooter() instanceof Player)) {return;} // Shooter must be player
     Entity shooter = (Entity) proj.getShooter();
     EntityType shooterType = shooter.getType();
 

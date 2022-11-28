@@ -5,72 +5,73 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.ProjectileSource;
 
+import java.util.Collection;
 import java.util.List;
 
 public class KirikoHackListener implements Listener {
 
   KirikoTimeRanges playerTimes;
   int INVULNERABILITY_TIME;
+  double EFFECT_DISTANCE;
 
   public KirikoHackListener(KirikoTimeRanges playerTimes) {
     this.playerTimes = playerTimes;
-    this.INVULNERABILITY_TIME = 40;
+    this.INVULNERABILITY_TIME = 60;
+    this.EFFECT_DISTANCE = 5.0;
   }
 
   @EventHandler
   public void onProjectileHit(ProjectileHitEvent event) {
 
-//    Entity target = event.getHitEntity();
-//    EntityType entityType = target.getType();
-
     Projectile proj = event.getEntity();
     EntityType projType = proj.getType();
 
+    if (!(proj.getShooter() instanceof Player)) {return;} // Shooter must be player
     Entity shooter = (Entity) proj.getShooter();
     EntityType shooterType = shooter.getType();
 
     Location hitLoc;
 
+    // Find location of snowball hit
     if (projType.equals(EntityType.SNOWBALL) && shooterType.equals(EntityType.PLAYER)) {
       World hitWorld = proj.getWorld();
       if (event.getHitBlock() != null) {
         Block hitBlock = event.getHitBlock();
         hitLoc = hitBlock.getLocation();
-        Bukkit.broadcastMessage("Kiriko E hit block " + hitBlock.getType());
-      } else if (event.getEntity() != null) {
+      } else {
+        event.getEntity();
         Entity hitEntity = event.getHitEntity();
         hitLoc = hitEntity.getLocation();
-        Bukkit.broadcastMessage("Kiriko E hit entity " + hitEntity.getType());
-      } else {
-        return;
       }
 
+      // Get list of entities, if is Player, remove effects and apply glowing
       List<Entity> entities = hitWorld.getEntities();
       for (Entity entity:entities) {
-        if (entity.getType().equals(EntityType.PLAYER) && hitLoc.distance(entity.getLocation()) < 3.0) {
-          Bukkit.broadcastMessage(entity.getName() + " has been affect by Kiriko E");
-          //Bukkit.broadcastMessage("Current world time " + hitWorld.getGameTime());
+        if (entity.getType().equals(EntityType.PLAYER) && hitLoc.distance(entity.getLocation()) < EFFECT_DISTANCE) {
+
           playerTimes.addPlayerTime((Player) entity, hitWorld.getGameTime()+INVULNERABILITY_TIME);
-          //playerTimes.printInfo();
+
+          // Remove all effects
+          Player p = (Player) entity;
+          Collection<PotionEffect> potionEffects = p.getActivePotionEffects();
+          for (PotionEffect pe : potionEffects) {
+            p.removePotionEffect(pe.getType());
+          }
+
+          // Glowing effect
+          PotionEffect glowingEffect = new PotionEffect(PotionEffectType.GLOWING, INVULNERABILITY_TIME, 1);
+          p.addPotionEffect(glowingEffect);
+
         }
       }
-
-
-//      event.setCancelled(true);
-//      double targetHealth = ((Player) target).getHealth();
-//      double targetMaxHealth = ((Player) target).getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-//      //Bukkit.broadcastMessage(target.getName() + " heal. Current health: "+targetHealth);
-//
-//      double newHealth = targetHealth + targetMaxHealth*0.2;
-//      ((Player) target).setHealth(Math.min(newHealth, targetMaxHealth));
     }
   }
 }
