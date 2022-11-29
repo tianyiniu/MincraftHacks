@@ -27,6 +27,7 @@ public class KirikoTimeRanges {
   }
 
   public boolean isInvulnerable(Player p, long time) {
+    if (!playerTimes.containsKey(p)) {return false;}
     return time <= getPlayerTime(p);
   }
 }

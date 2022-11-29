@@ -2,12 +2,16 @@ package me.tianyin.minecrafthacks;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.block.data.type.Snow;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
+import java.util.Queue;
+
 public class Main extends JavaPlugin {
+  HashMap<Player, Queue<Long>> hp;
   public static void main(String[] args) {
 
   }
@@ -22,9 +26,13 @@ public class Main extends JavaPlugin {
     Listener kirikoHackListener = new KirikoHackListener(playerTimes);
     Listener snowBallListener = new SnowballDamageListener(playerTimes);
 
+    hp = new HashMap<>();
+    Listener crouchListener = new CrouchTeleportListener(hp);
+
     getServer().getPluginManager().registerEvents(arrowDamageEvent, this);
     getServer().getPluginManager().registerEvents(kirikoHackListener, this);
     getServer().getPluginManager().registerEvents(snowBallListener, this);
+    getServer().getPluginManager().registerEvents(crouchListener, this);
   }
 
   @Override
